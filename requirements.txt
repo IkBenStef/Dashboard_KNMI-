@@ -5,5 +5,3 @@ plotly
 requests
 folium
 streamlit_folium
-datetime
-io

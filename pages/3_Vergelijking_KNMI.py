@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+import plotly.express as px
 from data_loader import load_knmi_data
 from stations import station_dict
 
@@ -47,7 +48,12 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 st.header("Correlatie temperatuur ↔ neerslag (jaarlijks)")
 
-merged = df_yearly.merge(df_yearly_rain, on='year')
-corr = merged['Temperatuur_C'].corr(merged['Neerslag_MM'])
-
-st.write(f"Pearson correlatie: {corr:.2f}")
+st.divider()
+fig = px.scatter(
+    df,
+    x='Temperatuur_C',
+    y='Neerslag_MM',
+    opacity=0.7,
+    title="Temperatuur vs Neerslag"
+)
+st.plotly_chart(fig, use_container_width=True)

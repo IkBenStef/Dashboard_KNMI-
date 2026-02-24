@@ -7,12 +7,10 @@ import folium
 from streamlit_folium import st_folium
 
 st.title("Weer voorspelling")
-st.subheader("Selecteer locatie")
 
 # Standaard startlocatie (Nederland)
 start_lat = 52.37
 start_lon = 4.89
-
 
 # =
 # Kaart om een locatie te kiezen
@@ -117,4 +115,5 @@ for i, col in enumerate(cols):
     with col:
         st.markdown(f"**{daily_df['date'][i].strftime('%a')}**")
         st.markdown(f"{daily_df['temp_max'][i]}° / {daily_df['temp_min'][i]}°")
+
         st.markdown(f"🌧️ {daily_df['rain'][i]} mm")

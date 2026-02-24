@@ -2,7 +2,7 @@ import streamlit as st
 import plotly.graph_objects as go
 from data_loader import load_knmi_data
 
-st.title("Historische data")
+st.set_page_config(page_title="Historische data", layout="wide")
 
 df_temp, df_yearly, df_monthly, z = load_knmi_data()
 

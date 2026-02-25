@@ -5,3 +5,5 @@ plotly
 requests
 folium
 streamlit_folium
+cbsodata
+locale

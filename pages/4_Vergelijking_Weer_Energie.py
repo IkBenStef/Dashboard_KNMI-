@@ -6,16 +6,21 @@ import plotly.express as px
 from data_loader import get_cbsodata_energie
 from data_loader import load_knmi_data
 from stations import station_dict
-from babel.dates import format_date
-import datetime
 
 st.sidebar.header("Instellingen")
 selected_station_name = st.sidebar.selectbox("Selecteer station",list(station_dict.keys()))
 station = station_dict[selected_station_name]
 df, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain, z = load_knmi_data(station=station)
 
-date = datetime.date(2025, 3, 1)
-formatted = format_date(date, format="MMMM yyyy", locale="nl")
+def safe_set_locale():
+    for loc in ['nl_NL.UTF-8', 'nl_NL', 'Dutch_Netherlands']:
+        try:
+            locale.setlocale(locale.LC_TIME, loc)
+            return
+        except locale.Error:
+            continue
+
+safe_set_locale()
 
 df_energie = get_cbsodata_energie()
 df_energie = df_energie[~df_energie['Perioden'].str.contains('1e|2e|3e|4e', na=False)]
@@ -149,3 +154,4 @@ Corr_zon.update_layout(
     xaxis=dict(range=['2014-01-01', df_energie['date'].max() + pd.DateOffset(years=1)])
 )
 st.plotly_chart(Corr_zon, use_container_width=True)
+

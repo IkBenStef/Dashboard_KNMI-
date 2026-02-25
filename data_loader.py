@@ -3,6 +3,7 @@ import numpy as np
 import requests
 import streamlit as st
 import io
+import cbsodata
 
 @st.cache_data
 def load_knmi_data(station="260"):
@@ -46,21 +47,21 @@ def load_knmi_data(station="260"):
     df['year'] = df['date'].dt.year
     df['month'] = df['date'].dt.month
 
-    # Jaarlijkse gemiddelden temperatuur
+    # Jaarlijkse
     df_yearly_temp = df.groupby('year')['Temperatuur_C'].mean().reset_index()
-
-    # Maandelijkse gemiddelden temperatuur
-    df_monthly_temp = df.groupby(['year', 'month'])['Temperatuur_C'].mean().reset_index()
-
-    # Jaarlijkse totale neerslag
     df_yearly_rain = df.groupby('year')['Neerslag_MM'].sum().reset_index()
+    # Maandelijkse
+    df_monthly_temp = df.groupby(['year', 'month'])['Temperatuur_C'].mean().reset_index()
+    df_monthly_rain = df.groupby(['year', 'month'])['Neerslag_MM'].sum().reset_index()
+    
+    
 
     # Trend berekenen
     z = np.polyfit(df_yearly_temp['year'], df_yearly_temp['Temperatuur_C'], 1)
     p = np.poly1d(z)
     df_yearly_temp['trend'] = p(df_yearly_temp['year'])
 
-    return df, df_yearly_temp, df_monthly_temp, df_yearly_rain, z
+    return df, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain, z
 
 @st.cache_data(ttl=1800)
 def load_weather_forecast(latitude, longitude):
@@ -107,3 +108,9 @@ def get_location_name(latitude, longitude):
     )
     
     return city
+
+def get_cbsodata_energie():
+    dataset = ('84575NED')
+    data = cbsodata.get_data(dataset)
+    df_energie = pd.DataFrame(data)
+    return df_energie

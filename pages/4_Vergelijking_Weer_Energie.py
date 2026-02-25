@@ -6,16 +6,16 @@ import plotly.express as px
 from data_loader import get_cbsodata_energie
 from data_loader import load_knmi_data
 from stations import station_dict
+from babel.dates import format_date
+import datetime
 
 st.sidebar.header("Instellingen")
 selected_station_name = st.sidebar.selectbox("Selecteer station",list(station_dict.keys()))
 station = station_dict[selected_station_name]
 df, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain, z = load_knmi_data(station=station)
 
-try:
-    locale.setlocale(locale.LC_TIME, 'nl_NL') 
-except:
-    locale.setlocale(locale.LC_TIME, 'Dutch_Netherlands')
+date = datetime.date(2025, 3, 1)
+formatted = format_date(date, format="MMMM yyyy", locale="nl")
 
 df_energie = get_cbsodata_energie()
 df_energie = df_energie[~df_energie['Perioden'].str.contains('1e|2e|3e|4e', na=False)]
@@ -44,7 +44,7 @@ EnergieProductie.update_layout(
     template="plotly_white",
     xaxis_title="Jaar",
     yaxis=dict(title="KiloWatt"),
-    title="Energie Productie",
+    title="Verschillende Energie Producties in Nederland",
     xaxis=dict(range=['2000-01-01', df_energie['date'].max() + pd.DateOffset(years=1)])
 )
 
@@ -64,7 +64,7 @@ EnergieProductieTot.update_layout(
     template="plotly_white",
     xaxis_title="Jaar",
     yaxis=dict(title="KiloWatt"),
-    title="Energie Productie",
+    title="Totale Energie Productie in Nederland",
     xaxis=dict(range=['1975-01-01', df_energie['date'].max() + pd.DateOffset(years=1)])
 )
 st.plotly_chart(EnergieProductieTot, use_container_width=True)

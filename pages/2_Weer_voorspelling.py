@@ -129,11 +129,20 @@ fig_rain.add_trace(go.Bar(
 
 fig_rain.update_layout(
     template="plotly_white",
-    title="Neerslag per uur (aankomende 24 uur)",
+    title="Neerslag per uur (vandaag)",
     xaxis_title="Tijd",
     yaxis_title="neerslag in milimeter"
 )
 
 st.plotly_chart(fig_rain, use_container_width=True)
+total_precipitation = hourly_today["precipitation"].sum()
+if total_precipitation == 0:
+    st.write("Geen regen verwacht, het blijft droog!")
+else:
+    st.write(f"Totale neerslag vandaag: {total_precipitation}")
 
 st.divider() # streep ------------------------------------------------------------
+
+st.header("Ruwe data")
+st.dataframe(hourly_today)
+st.write(data)

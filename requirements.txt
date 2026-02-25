@@ -6,3 +6,4 @@ requests
 folium
 streamlit_folium
 cbsodata
+babel

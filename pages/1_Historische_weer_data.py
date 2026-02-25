@@ -1,70 +1,131 @@
 import streamlit as st
 import plotly.graph_objects as go
+import numpy as np
 from data_loader import load_knmi_data
 from stations import station_dict
 
-
-
-selected_station_name = st.selectbox("Selecteer station",list(station_dict.keys()))
-station = station_dict[selected_station_name]
-df, df_yearly, df_monthly, df_yearly_rain, z = load_knmi_data(station=station)
-# =========================================================
-# 1️⃣ JAARGEMIDDELDE MET TREND
-# =========================================================
 st.set_page_config(page_title="Historische data", layout="wide")
-st.header("Historische data")
-st.divider()
 
-min_year = int(df_yearly['year'].min())
-max_year = int(df_yearly['year'].max())
+# =========================================================
+# SIDEBAR
 
-selected_year_range = st.slider(
+st.sidebar.header("Instellingen")
+selected_station_name = st.sidebar.selectbox("Selecteer station",list(station_dict.keys()))
+station = station_dict[selected_station_name]
+
+df, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain, z = load_knmi_data(station=station)
+
+min_year = int(df_yearly_temp['year'].min())
+max_year = int(df_yearly_temp['year'].max())
+
+# Jaar slider
+selected_year_range = st.sidebar.slider(
     "Selecteer jaartal range",
     min_value=min_year,
     max_value=max_year,
     value=(min_year, max_year),
 )
 
-df_yearly_filtered = df_yearly[
-    (df_yearly['year'] >= selected_year_range[0]) &
-    (df_yearly['year'] <= selected_year_range[1])
+# =========================================================
+# MAAND SELECTIE MET SELECTEER ALLES / DESELECTEER ALLES
+
+maand_namen = {1: "Januari", 2: "Februari", 3: "Maart", 4: "April",5: "Mei", 6: "Juni", 7: "Juli", 8: "Augustus",9: "September", 10: "Oktober", 11: "November", 12: "December"}
+maand_lijst = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+# Session state initialiseren
+if "selected_months" not in st.session_state:
+    st.session_state.selected_months = list(maand_namen.keys())
+
+st.sidebar.markdown("### Selecteer maanden")
+
+col1, col2 = st.sidebar.columns(2)
+if col1.button("Selecteer Alles"):
+    st.session_state.selected_months = list(maand_namen.keys())
+if col2.button("Selecteer Niets"):
+    st.session_state.selected_months = []
+
+selected_months = st.sidebar.multiselect(
+    "Selecteer maanden",
+    options=list(maand_namen.keys()),
+    format_func=lambda x: maand_namen[x],
+    default=st.session_state.selected_months,
+    key="selected_months"
+)
+
+
+
+# =========================================================
+# JAARGEMIDDELDE MET TREND (MAANDAFHANKELIJK)
+st.header("Historische data")
+st.divider()
+
+df_filtered = df_monthly_temp[
+    (df_monthly_temp['year'] >= selected_year_range[0]) &
+    (df_monthly_temp['year'] <= selected_year_range[1]) &
+    (df_monthly_temp['month'].isin(selected_months))
 ]
 
-fig_year = go.Figure()
+df_yearly_filtered = (
+    df_filtered
+    .groupby('year')['Temperatuur_C']
+    .mean()
+    .reset_index()
+)
 
-fig_year.add_trace(go.Scatter(
+fig_year_temp = go.Figure()
+
+fig_year_temp.add_trace(go.Scatter(
     x=df_yearly_filtered['year'],
     y=df_yearly_filtered['Temperatuur_C'],
     mode='lines+markers',
     name='Gemiddelde temperatuur'
 ))
 
-fig_year.add_trace(go.Scatter(
-    x=df_yearly_filtered['year'],
-    y=df_yearly_filtered['trend'],
-    mode='lines',
-    name='Trend',
-    line=dict(dash='dash')
-))
+if len(df_yearly_filtered) > 1:
+    z_new = np.polyfit(
+        df_yearly_filtered['year'],
+        df_yearly_filtered['Temperatuur_C'],
+        1
+    )
 
-fig_year.update_layout(
+    df_yearly_filtered['trend'] = (
+        z_new[0] * df_yearly_filtered['year'] + z_new[1]
+    )
+
+    fig_year_temp.add_trace(go.Scatter(
+        x=df_yearly_filtered['year'],
+        y=df_yearly_filtered['trend'],
+        mode='lines',
+        name='Trend',
+        line=dict(dash='dash')
+    ))
+
+    st.markdown(f"**Gemiddelde stijging per jaar:** {z_new[0]:.4f} °C")
+
+fig_year_temp.update_layout(
     template="plotly_white",
     xaxis_title="Jaar",
     yaxis_title="Gemiddelde temperatuur (°C)",
-    yaxis=dict(range=[0, df_yearly['Temperatuur_C'].max()+1.5]),
-    title="Gemiddelde jaarlijkse temperatuur (Nederland)"
+    title="Gemiddelde jaarlijkse temperatuur",
+    yaxis=dict(range=[0, 13])
 )
 
-st.plotly_chart(fig_year, use_container_width=True)
-st.markdown(f"**Gemiddelde stijging per jaar:** {z[0]:.4f} °C")
+st.plotly_chart(fig_year_temp, use_container_width=True)
 
 st.divider()
+
+# =========================================================
+# NEERSLAG PER JAAR
+
+df_rain_filtered = df_yearly_rain[
+    (df_yearly_rain['year'] >= selected_year_range[0]) &
+    (df_yearly_rain['year'] <= selected_year_range[1])
+]
 
 fig_rain = go.Figure()
 
 fig_rain.add_trace(go.Bar(
-    x=df_yearly_rain['year'],
-    y=df_yearly_rain['Neerslag_MM'],
+    x=df_rain_filtered['year'],
+    y=df_rain_filtered['Neerslag_MM'],
     name='Totale neerslag'
 ))
 
@@ -77,34 +138,32 @@ fig_rain.update_layout(
 
 st.plotly_chart(fig_rain, use_container_width=True)
 
+st.divider()
+
 # =========================================================
-# 2️⃣ GEMIDDELDE PER MAAND (BARPLOT MET JAARSLIDER)
-# =========================================================
+# GEMIDDELDE TEMPERATUUR PER MAAND (BARPLOT)
 
 st.header("Gemiddelde temperatuur per maand")
 
-selected_year_range_month = st.slider(
-    "Selecteer jaartal range voor maandgemiddelde",
-    min_value=min_year,
-    max_value=max_year,
-    value=(min_year, max_year),
-    key="month_slider"
-)
-
-df_monthly_filtered = df_monthly[
-    (df_monthly['year'] >= selected_year_range_month[0]) &
-    (df_monthly['year'] <= selected_year_range_month[1])
+df_monthly_filtered_temp = df_monthly_temp[
+    (df_monthly_temp['year'] >= selected_year_range[0]) &
+    (df_monthly_temp['year'] <= selected_year_range[1])
 ]
 
-df_monthly_avg = df_monthly_filtered.groupby('month')['Temperatuur_C'].mean().reset_index()
+df_monthly_avg_temp = (
+    df_monthly_filtered_temp
+    .groupby('month')['Temperatuur_C']
+    .mean()
+    .reset_index()
+)
 
 fig_month_bar = go.Figure()
 
 fig_month_bar.add_trace(go.Bar(
-    x=df_monthly_avg['month'],
-    y=df_monthly_avg['Temperatuur_C'],
+    x=df_monthly_avg_temp['month'],
+    y=df_monthly_avg_temp['Temperatuur_C'],
     marker=dict(
-        color=df_monthly_avg['Temperatuur_C'],
+        color=df_monthly_avg_temp['Temperatuur_C'],
         colorscale='Bluered',
         colorbar=dict(title="Waarde")
     ),
@@ -116,8 +175,7 @@ fig_month_bar.update_layout(
     xaxis=dict(
         tickmode='array',
         tickvals=list(range(1, 13)),
-        ticktext=["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun",
-                  "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+        ticktext=maand_lijst
     ),
     xaxis_title="Maand",
     yaxis_title="Gemiddelde temperatuur (°C)",
@@ -125,42 +183,46 @@ fig_month_bar.update_layout(
 
 st.plotly_chart(fig_month_bar, use_container_width=True)
 
-st.divider()
-
 # =========================================================
-# 3️⃣ ONTWIKKELING VAN ÉÉN MAAND OVER DE JAREN
-# =========================================================
+# Totale REGEN PER MAAND (BARPLOT)
 
-st.header("Ontwikkeling van temperatuur van één maand over de jaren")
+st.header("Totale neerslag per maand")
 
-maand_namen = {
-    1: "Januari", 2: "Februari", 3: "Maart", 4: "April",
-    5: "Mei", 6: "Juni", 7: "Juli", 8: "Augustus",
-    9: "September", 10: "Oktober", 11: "November", 12: "December"
-}
+df_monthly_filtered = df_monthly_rain[
+    (df_monthly_rain['year'] >= selected_year_range[0]) &
+    (df_monthly_rain['year'] <= selected_year_range[1])
+]
 
-selected_month = st.selectbox(
-    "Selecteer maand",
-    options=list(maand_namen.keys()),
-    format_func=lambda x: maand_namen[x],
-    index=0  # standaard januari
+df_monthly_tot_rain = (
+    df_monthly_filtered
+    .groupby('month')['Neerslag_MM']
+    .sum()
+    .reset_index()
 )
 
-df_selected_month = df_monthly[df_monthly['month'] == selected_month]
+fig_month_bar = go.Figure()
 
-fig_month_trend = go.Figure()
-
-fig_month_trend.add_trace(go.Scatter(
-    x=df_selected_month['year'],
-    y=df_selected_month['Temperatuur_C'],
-    mode='lines+markers',
-    name=maand_namen[selected_month]
+fig_month_bar.add_trace(go.Bar(
+    x=df_monthly_tot_rain['month'],
+    y=df_monthly_tot_rain['Neerslag_MM'],
+    name="Maandtotaal"
 ))
 
-fig_month_trend.update_layout(
+fig_month_bar.update_layout(
     template="plotly_white",
-    xaxis_title="Jaar",
-    yaxis_title="Gemiddelde temperatuur (°C)",
+    xaxis=dict(
+        tickmode='array',
+        tickvals=list(range(1, 13)),
+        ticktext=maand_lijst
+    ),
+    xaxis_title="Maand",
+    yaxis_title="Totaal Neerslag_MM",
 )
 
-st.plotly_chart(fig_month_trend, use_container_width=True)
+st.plotly_chart(fig_month_bar, use_container_width=True)
+
+# =========================================================
+# Ruwe Data
+st.divider()
+st.header("Ruwe data")
+st.dataframe(df)

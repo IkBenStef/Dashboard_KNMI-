@@ -95,6 +95,11 @@ EnergieProductieTot.add_trace(go.Scatter(
     y=df_energie['BrutoProductie_1'],
     mode='lines+markers',
 ))
+EnergieProductieTot.add_trace(go.Scatter(
+    x=df_energie['date'],
+    y=df_energie['NettoVerbruikBerekend_30'],
+    mode='lines+markers',
+))
 
 EnergieProductieTot.update_layout(
     template="plotly_white",
@@ -116,10 +121,7 @@ st.dataframe(df_knmi_energie)
 # ====================== HEATMAP CORRELATIE
 st.header("Heatmap correlatie energie en KNMI (met waarden)")
 
-corr_cols = [
-    'Temperatuur_C', 'Neerslag_MM', 'Windsnelheid_ms',
-    'BrutoProductie_1'
-] + energy_cols
+corr_cols = ['Temperatuur_C', 'Neerslag_MM', 'Windsnelheid_ms','BrutoProductie_1', 'NettoVerbruikBerekend_30'] + energy_cols
 
 corr_matrix = df_knmi_energie[corr_cols].corr()
 

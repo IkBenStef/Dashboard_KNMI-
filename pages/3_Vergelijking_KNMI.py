@@ -12,7 +12,7 @@ st.sidebar.header("Instellingen")
 selected_station_name = st.sidebar.selectbox("Selecteer station",list(station_dict.keys()))
 station = station_dict[selected_station_name]
 
-df, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain, z = load_knmi_data(station=station)
+df_meteorologisch, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain = load_knmi_data(station=station)
 
 # Jaar slider
 min_year = int(df_yearly_temp['year'].min())
@@ -36,9 +36,9 @@ df_yearly_rain_filtered = df_yearly_rain[
     (df_yearly_rain['year'] <= selected_year_range[1])
 ]
 
-df_filtered = df[
-    (df['year'] >= selected_year_range[0]) &
-    (df['year'] <= selected_year_range[1])
+df_filtered = df_meteorologisch[
+    (df_meteorologisch['year'] >= selected_year_range[0]) &
+    (df_meteorologisch['year'] <= selected_year_range[1])
 ]
 
 # =========================================================

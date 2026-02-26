@@ -91,5 +91,30 @@ fig_corr = px.scatter(
     opacity=0.7,
     title=f"Temperatuur vs Neerslag ({selected_year_range[0]}-{selected_year_range[1]})"
 )
+st.plotly_chart(fig_corr, use_container_width=True)
 
+# Correlatieplot Temperatuur ↔ Windsnelheid
+st.header("Correlatie Temperatuur <-> Windsnelheid_ms (jaarlijks)")
+st.divider()
+
+fig_corr = px.scatter(
+    df_filtered,
+    x='Temperatuur_C',
+    y='Windsnelheid_ms',
+    opacity=0.7,
+    title=f"Temperatuur vs Windsnelheid ({selected_year_range[0]}-{selected_year_range[1]})"
+)
+st.plotly_chart(fig_corr, use_container_width=True)
+
+# Correlatieplot temperatuur ↔ Windsnelheid
+st.header("Correlatie Neerslag <-> Windsnelheid_ms (jaarlijks)")
+st.divider()
+
+fig_corr = px.scatter(
+    df_filtered,
+    x='Neerslag_MM',
+    y='Windsnelheid_ms',
+    opacity=0.7,
+    title=f"Neerslag vs Windsnelheid ({selected_year_range[0]}-{selected_year_range[1]})"
+)
 st.plotly_chart(fig_corr, use_container_width=True)

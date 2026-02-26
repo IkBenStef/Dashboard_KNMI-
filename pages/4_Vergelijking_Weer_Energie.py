@@ -94,11 +94,13 @@ EnergieProductieTot.add_trace(go.Scatter(
     x=df_energie['date'],
     y=df_energie['BrutoProductie_1'],
     mode='lines+markers',
+    name='Bruto Energie Productie'
 ))
 EnergieProductieTot.add_trace(go.Scatter(
     x=df_energie['date'],
     y=df_energie['NettoVerbruikBerekend_30'],
     mode='lines+markers',
+    name='Netto Energie Verbruik'
 ))
 
 EnergieProductieTot.update_layout(
@@ -228,3 +230,4 @@ Corr_zon.update_yaxes(title_text="Temperatuur (°C)", secondary_y=False)
 Corr_zon.update_yaxes(title_text="Netto Verbruik (kWh)", secondary_y=True)
 
 st.plotly_chart(Corr_zon, use_container_width=True)
+

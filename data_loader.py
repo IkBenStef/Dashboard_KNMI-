@@ -8,14 +8,7 @@ import cbsodata
 @st.cache_data
 def load_knmi_data(station="260"):
     url = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
-
-    params = {
-    "stns": station,
-    "vars": "TG:RH",     
-    "start": "19000101",
-    "end": "20251231"
-}
-
+    params = {"stns": station, "vars": "TG:RH:FG", "start": "19000101", "end": "20251231"}
     response = requests.post(url, data=params)
 
     if response.status_code != 200:
@@ -31,42 +24,32 @@ def load_knmi_data(station="260"):
             header_line = line.replace('#', '').strip()
         elif not line.startswith('#') and line.strip():
             data_lines.append(line)
-    print(response.status_code)
-    print(response.text)
     csv_data = header_line + "\n" + "\n".join(data_lines)
-    df = pd.read_csv(io.StringIO(csv_data), skipinitialspace=True)
+    df_meteorologisch = pd.read_csv(io.StringIO(csv_data), skipinitialspace=True)
 
     # Datum correct zetten
-    df['YYYYMMDD'] = pd.to_datetime(df['YYYYMMDD'], format='%Y%m%d')
-    df.rename(columns={'YYYYMMDD': 'date'}, inplace=True)
+    df_meteorologisch['YYYYMMDD'] = pd.to_datetime(df_meteorologisch['YYYYMMDD'], format='%Y%m%d')
+    df_meteorologisch.rename(columns={'YYYYMMDD': 'date'}, inplace=True)
 
     # Eenheden corrigeren
-    df['Temperatuur_C'] = df['TG'] * 0.1
-    df['Neerslag_MM'] = df['RH'] * 0.1
+    df_meteorologisch['Temperatuur_C'] = df_meteorologisch['TG'] * 0.1
+    df_meteorologisch['Neerslag_MM'] = df_meteorologisch['RH'] * 0.1
+    df_meteorologisch['Windsnelheid_ms'] = df_meteorologisch['FG'] * 0.1
 
-    df['year'] = df['date'].dt.year
-    df['month'] = df['date'].dt.month
+    df_meteorologisch['year'] = df_meteorologisch['date'].dt.year
+    df_meteorologisch['month'] = df_meteorologisch['date'].dt.month
 
-    # Jaarlijkse
-    df_yearly_temp = df.groupby('year')['Temperatuur_C'].mean().reset_index()
-    df_yearly_rain = df.groupby('year')['Neerslag_MM'].sum().reset_index()
-    # Maandelijkse
-    df_monthly_temp = df.groupby(['year', 'month'])['Temperatuur_C'].mean().reset_index()
-    df_monthly_rain = df.groupby(['year', 'month'])['Neerslag_MM'].sum().reset_index()
-    
-    
+    # Jaarlijkse groepering
+    df_yearly_temp = df_meteorologisch.groupby('year')['Temperatuur_C'].mean().reset_index()
+    df_yearly_rain = df_meteorologisch.groupby('year')['Neerslag_MM'].sum().reset_index()
+    # Maandelijkse groepering
+    df_monthly_temp = df_meteorologisch.groupby(['year', 'month'])['Temperatuur_C'].mean().reset_index()
+    df_monthly_rain = df_meteorologisch.groupby(['year', 'month'])['Neerslag_MM'].sum().reset_index()
 
-    # Trend berekenen
-    z = np.polyfit(df_yearly_temp['year'], df_yearly_temp['Temperatuur_C'], 1)
-    p = np.poly1d(z)
-    df_yearly_temp['trend'] = p(df_yearly_temp['year'])
-
-    return df, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain, z
+    return df_meteorologisch, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain
 
 @st.cache_data(ttl=1800)
 def load_weather_forecast(latitude, longitude):
-    import requests
-    
     url = (
         f"https://api.open-meteo.com/v1/forecast"
         f"?latitude={latitude}"
@@ -75,28 +58,17 @@ def load_weather_forecast(latitude, longitude):
         "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum"
         "&timezone=auto"
     )
-    
     response = requests.get(url)
     data = response.json()
-    
+
     return data
 
 @st.cache_data(ttl=1800)
 def get_location_name(latitude, longitude):
-    import requests
-    
-    url = (
-        f"https://nominatim.openstreetmap.org/reverse"
-        f"?lat={latitude}&lon={longitude}&format=json"
-    )
-    
-    headers = {
-        "User-Agent": "streamlit-weather-app"
-    }
-    
+    url = (f"https://nominatim.openstreetmap.org/reverse"f"?lat={latitude}&lon={longitude}&format=json")
+    headers = {"User-Agent": "streamlit-weather-app"}
     response = requests.get(url, headers=headers)
     data = response.json()
-    
     address = data.get("address", {})
     
     city = (
@@ -106,7 +78,7 @@ def get_location_name(latitude, longitude):
         or address.get("municipality")
         or "Onbekende locatie"
     )
-    
+
     return city
 
 def get_cbsodata_energie():

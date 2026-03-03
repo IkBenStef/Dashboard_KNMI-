@@ -59,26 +59,26 @@ df_meteorologisch = df_meteorologisch[
 ]
 
 # ======================================================================================== Dataframes
+# samenvoegen dataframes
 df_knmi_energie = pd.merge(df_meteorologisch, df_energie, on='date', how='inner')
 
-
-st.header('Ruwe dataframes')
-st.write(
-    "Let op: energie is uitgedrukt in miljoen kilowattuur (mln kWh). "
-    "1 miljoen kilowattuur is 1.000.000 kilowattuur. "
-    "Een windmolen maakt ongeveer 20.000 kilowattuur per dag en een gemiddeld huishouden verbruikt ongeveer 3.000 kilowattuur per dag."
-)
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.header('Energie dataframe van cbsodata')
-    st.dataframe(df_energie)
-with col2:
-    st.header("Meteorologisch dataframe van KNMI")
-    st.dataframe(df_meteorologisch)
-with col3:
-    st.header('Samengevoegde dataframe')
-    st.dataframe(df_knmi_energie)
-st.divider()
+with st.expander('Ruwe data'): 
+    st.write(
+        "Let op: energie is uitgedrukt in miljoen kilowattuur (mln kWh). "
+        "1 miljoen kilowattuur is 1.000.000 kilowattuur. "
+        "Een windmolen maakt ongeveer 20.000 kilowattuur per dag en een gemiddeld huishouden verbruikt ongeveer 3.000 kilowattuur per dag."
+    )
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.header('Energie dataframe van cbsodata')
+        st.dataframe(df_energie)
+    with col2:
+        st.header("Meteorologisch dataframe van KNMI")
+        st.dataframe(df_meteorologisch)
+    with col3:
+        st.header('Samengevoegde dataframe')
+        st.dataframe(df_knmi_energie)
+    st.divider()
 
 # ======================================================================================== Energie plots
 energy_cols = ['Kernenergie_4', 'Kolen_6', 'Olieproducten_7', 'Aardgas_8', 'Biomassa_9', 'Waterkracht_11', 'WindenergieTotaal_12', 'Zonnestroom_15']
@@ -129,7 +129,7 @@ st.plotly_chart(EnergieProductieTot, use_container_width=True)
 st.divider()
 
 # ======================================================================================== heatmap corrolaties
-st.header("Heatmap correlatie energie en meteorologische waarden")
+st.subheader("Heatmap correlatie energie en meteorologische waarden")
 
 meteo_vars = ['Temperatuur_C', 'Neerslag_MM', 'Windsnelheid_ms']
 corr_cols = meteo_vars + ['BrutoProductie_1', 'NettoVerbruikBerekend_30'] + energy_cols

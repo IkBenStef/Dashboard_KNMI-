@@ -4,7 +4,7 @@ import numpy as np
 from data_loader import load_knmi_data
 from stations import station_dict
 
-st.set_page_config(page_title="Historische data", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="Historische data", layout="wide")
 
 # ========================================================= SIDEBAR
 
@@ -208,4 +208,5 @@ fig_month_bar.update_layout(
     yaxis_title="Totaal Neerslag_MM",
 )
 st.header("Totale neerslag per maand")
+
 st.plotly_chart(fig_month_bar, use_container_width=True)

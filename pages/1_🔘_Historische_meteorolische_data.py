@@ -4,8 +4,9 @@ import numpy as np
 from data_loader import load_knmi_data
 from stations import station_dict
 
-st.set_page_config(page_title="Historische data", layout="wide")
-
+st.set_page_config(layout="wide")
+st.title("Historische data")
+st.divider()
 # ========================================================= SIDEBAR
 
 st.sidebar.header("Instellingen")
@@ -50,9 +51,6 @@ selected_months = st.sidebar.multiselect(
 )
 
 # ========================================================= Jaargemiddelde met trend (maandafhankelijk)
-
-st.header("Historische data")
-st.divider()
 
 df_filtered = df_monthly_temp[
     (df_monthly_temp['year'] >= selected_year_range[0]) &
@@ -104,7 +102,7 @@ fig_year_temp.update_layout(
     yaxis=dict(range=[0, 13])
 )
 
-st.header("Gemiddelde jaarlijkse temperatuur")
+st.subheader("Gemiddelde jaarlijkse temperatuur")
 st.plotly_chart(fig_year_temp, use_container_width=True)
 st.markdown(f"**Gemiddelde stijging per jaar:** {yearly_trend_coefficients[0]:.4f} °C")
 st.divider()
@@ -130,7 +128,7 @@ fig_rain.update_layout(
     yaxis_title="Totale neerslag (mm)"
 )
 
-st.header("Totale neerslag per jaar")
+st.subheader("Totale neerslag per jaar")
 st.plotly_chart(fig_rain, use_container_width=True)
 st.divider()
 
@@ -171,7 +169,7 @@ fig_month_bar.update_layout(
     xaxis_title="Maand",
     yaxis_title="Gemiddelde temperatuur (°C)",
 )
-st.header("Gemiddelde temperatuur per maand")
+st.subheader("Gemiddelde temperatuur per maand")
 st.plotly_chart(fig_month_bar, use_container_width=True)
 
 # ========================================================= Totale regen per maand
@@ -206,5 +204,5 @@ fig_month_bar.update_layout(
     xaxis_title="Maand",
     yaxis_title="Totaal Neerslag_MM",
 )
-st.header("Totale neerslag per maand (totaal over de hele jaar range)")
+st.subheader("Totale neerslag per maand (totaal over de hele jaar range)")
 st.plotly_chart(fig_month_bar, use_container_width=True)

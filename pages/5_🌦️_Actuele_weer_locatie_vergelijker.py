@@ -17,7 +17,7 @@ col1, col2 = st.columns(2)
  
 with col1:
     st.subheader("Locatie A")
-    m1 = folium.Map(location=[defaults["loc1"]["lat"], defaults["loc1"]["lon"]], zoom_start=4)
+    m1 = folium.Map(location=[defaults["loc1"]["lat"], defaults["loc1"]["lon"]], zoom_start=4, tiles="Cartodb Positron")
     map_a = st_folium(m1, width=None, height=300, key="map_a")
    
     lat_a = map_a["last_clicked"]["lat"] if map_a and map_a["last_clicked"] else defaults["loc1"]["lat"]
@@ -29,7 +29,7 @@ with col1:
  
 with col2:
     st.subheader("Locatie B")
-    m2 = folium.Map(location=[defaults["loc2"]["lat"], defaults["loc2"]["lon"]], zoom_start=4)
+    m2 = folium.Map(location=[defaults["loc2"]["lat"], defaults["loc2"]["lon"]], zoom_start=4, tiles="Cartodb Positron")
     map_b = st_folium(m2, width=None, height=300, key="map_b")
    
     lat_b = map_b["last_clicked"]["lat"] if map_b and map_b["last_clicked"] else defaults["loc2"]["lat"]

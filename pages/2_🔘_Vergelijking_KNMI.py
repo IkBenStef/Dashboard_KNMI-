@@ -4,14 +4,11 @@ import plotly.express as px
 from data_loader import load_knmi_data
 from stations import station_dict
 
-# =========================================================
-# SIDEBAR
+# ======================================================================================== Sidebar
 st.sidebar.header("Instellingen")
 
-# Station selectie
 selected_station_name = st.sidebar.selectbox("Selecteer station",list(station_dict.keys()))
 station = station_dict[selected_station_name]
-
 df_meteorologisch, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain = load_knmi_data(station=station)
 
 # Jaar slider
@@ -41,17 +38,14 @@ df_filtered = df_meteorologisch[
     (df_meteorologisch['year'] <= selected_year_range[1])
 ]
 
-# =========================================================
-# PAGINA
+# ======================================================================================== Grafieken
 
 st.set_page_config(page_title="Vergelijking KNMI", layout="wide")
-st.header(f"Jaarlijkse temperatuur & neerslag - {selected_station_name}")
+st.subheader("Jaarlijkse temperatuur & neerslag")
 
 
-# Lijn + Bar dubbele y-as
+# temperatuur <-> neerslag
 fig = go.Figure()
-
-# Temperatuur (lijn)
 fig.add_trace(go.Scatter(
     x=df_yearly_temp_filtered['year'],
     y=df_yearly_temp_filtered['Temperatuur_C'],
@@ -60,7 +54,6 @@ fig.add_trace(go.Scatter(
     yaxis='y1'
 ))
 
-# Neerslag (bar)
 fig.add_trace(go.Bar(
     x=df_yearly_rain_filtered['year'],
     y=df_yearly_rain_filtered['Neerslag_MM'],
@@ -69,52 +62,35 @@ fig.add_trace(go.Bar(
     opacity=0.5
 ))
 
-# Dubbele y-as layout
 fig.update_layout(
     template="plotly_white",
     xaxis_title="Jaar",
     yaxis=dict(title="Temperatuur (°C)", side='left'),
-    yaxis2=dict(title="Neerslag (mm)", overlaying='y', side='right'),
-    title=f"Temperatuur vs neerslag per jaar - {selected_station_name}"
+    yaxis2=dict(title="Neerslag (mm)", overlaying='y', side='right')
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Correlatieplot Temperatuur ↔ Neerslag
-st.divider()
-st.header("Correlatie Temperatuur <-> Neerslag (jaarlijks)")
 
-fig_corr_temp_rain = px.scatter(
-    df_filtered,
-    x='Temperatuur_C',
-    y='Neerslag_MM',
-    opacity=0.7
-)
+# Correlatieplot Temperatuur <-> Neerslag
+st.divider()
+st.subheader("Correlatie Temperatuur <-> Neerslag ")
+
+fig_corr_temp_rain = px.scatter(df_filtered,x='Temperatuur_C',y='Neerslag_MM',opacity=0.7)
 
 st.plotly_chart(fig_corr_temp_rain, use_container_width=True)
 
 # Correlatieplot Temperatuur ↔ Windsnelheid
 st.divider()
-st.header("Correlatie Temperatuur <-> Windsnelheid_ms (jaarlijks)")
+st.subheader("Correlatie Temperatuur <-> Windsnelheid ")
 
-fig_corr_temp_wind = px.scatter(
-    df_filtered,
-    x='Temperatuur_C',
-    y='Windsnelheid_ms',
-    opacity=0.7
-)
+fig_corr_temp_wind = px.scatter(df_filtered,x='Temperatuur_C',y='Windsnelheid_ms',opacity=0.7)
 
 st.plotly_chart(fig_corr_temp_wind, use_container_width=True)
 
 # Correlatieplot temperatuur ↔ Windsnelheid
 st.divider()
-st.header("Correlatie Neerslag <-> Windsnelheid_ms (jaarlijks)")
+st.subheader("Correlatie Neerslag <-> Windsnelheid")
 
-fig_corr_wind_rian = px.scatter(
-    df_filtered,
-    x='Windsnelheid_ms',
-    y='Neerslag_MM',
-    opacity=0.7
-)
-
+fig_corr_wind_rian = px.scatter(df_filtered,x='Windsnelheid_ms',y='Neerslag_MM',opacity=0.7)
 st.plotly_chart(fig_corr_wind_rian, use_container_width=True)

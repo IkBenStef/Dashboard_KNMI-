@@ -127,12 +127,11 @@ fig_rain.add_trace(go.Bar(
 fig_rain.update_layout(
     template="plotly_white",
     xaxis_title="Jaar",
-    yaxis_title="Totale neerslag (mm)",
-    title="Gemiddelde neerslag per jaar"
+    yaxis_title="Totale neerslag (mm)"
 )
 
+st.header("Totale neerslag per jaar")
 st.plotly_chart(fig_rain, use_container_width=True)
-
 st.divider()
 
 # ========================================================= Gemiddelde temperatuur per maand
@@ -207,6 +206,5 @@ fig_month_bar.update_layout(
     xaxis_title="Maand",
     yaxis_title="Totaal Neerslag_MM",
 )
-st.header("Totale neerslag per maand")
-
+st.header("Totale neerslag per maand (totaal over de hele jaar range)")
 st.plotly_chart(fig_month_bar, use_container_width=True)

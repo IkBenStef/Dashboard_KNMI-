@@ -14,27 +14,28 @@ start_lon = 4.89
 
 
 # =============================================================== Kaart om een locatie te kiezen
+# Startlocatie
+start_lat = 52.37
+start_lon = 4.89
 
-m = folium.Map(location=[start_lat, start_lon], zoom_start=7)
+m = folium.Map(
+    location=[start_lat, start_lon],
+    zoom_start=7,
+    tiles="CartoDB positron" 
+)
 
-with st.sidebar:
-    st.write('Kies een plek op de kaart')
-    map_data = st_folium(m, width=300, height=400)
-
-if map_data and map_data["last_clicked"]:
+st.subheader("Klik op de kaart om een locatie te kiezen om het weer daar te zien:")
+map_data = st_folium(m, width=1200,     height=300)  
+if map_data["last_clicked"]:
     latitude = map_data["last_clicked"]["lat"]
     longitude = map_data["last_clicked"]["lng"]
 else:
     latitude = start_lat
     longitude = start_lon
-data = load_weather_forecast(latitude, longitude)
-if map_data and map_data["last_clicked"]:
-    folium.Marker(
-        [latitude, longitude],
-        tooltip="Geselecteerde locatie"
-    ).add_to(m)
 
-# =============================================================== HUIDIGE TEMPERATUUR
+# =============================================================== Verkrijg data
+data = load_weather_forecast(latitude, longitude)
+# =============================================================== huidige temperatuur
 
 
 current_temp = data["hourly"]["temperature_2m"][0]
@@ -43,7 +44,7 @@ st.markdown(f"## 🌡️ {current_temp} °C")
 location_name = get_location_name(latitude, longitude)
 st.markdown(f"📍 {location_name} — {datetime.now().strftime('%d %B %Y')}")
 
-# =============================================================== 7-DAAGSE FORECAST
+# =============================================================== aankomende 7 dagen
 
 st.divider() # streep ------------------------------------------------------------
 st.subheader("Week verwachting")
@@ -65,7 +66,7 @@ for i, col in enumerate(cols):
 
 st.divider() # streep ------------------------------------------------------------
 
-# =============================================================== UURDATA VAN VANDAAG
+# =============================================================== uurdata van vandaag
 
 hourly_df = pd.DataFrame({
     "time": pd.to_datetime(data["hourly"]["time"]),
@@ -83,6 +84,7 @@ fig_temp.add_trace(go.Scatter(
     y=hourly_today["temperature"],
     mode="lines+markers",
     name="Temperatuur",
+    line_color="gray",
     marker=dict(
         color=hourly_today['temperature'],
         colorscale='Bluered',
@@ -138,6 +140,6 @@ else:
 
 st.divider() # streep ------------------------------------------------------------
 
-st.header("Ruwe data")
-st.dataframe(hourly_today)
-st.write(data)
+with st.expander("Ruwe data"): 
+    st.dataframe(hourly_today)
+    st.write(data)

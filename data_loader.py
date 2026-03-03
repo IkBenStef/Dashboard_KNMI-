@@ -31,7 +31,7 @@ def load_knmi_data(station="260"):
     df_meteorologisch['YYYYMMDD'] = pd.to_datetime(df_meteorologisch['YYYYMMDD'], format='%Y%m%d')
     df_meteorologisch.rename(columns={'YYYYMMDD': 'date'}, inplace=True)
 
-    # Eenheden corrigeren
+    # Eenheden corrigeren met nieuwe kolommen
     df_meteorologisch['Temperatuur_C'] = df_meteorologisch['TG'] * 0.1
     df_meteorologisch['Neerslag_MM'] = df_meteorologisch['RH'] * 0.1
     df_meteorologisch['Windsnelheid_ms'] = df_meteorologisch['FG'] * 0.1
@@ -48,7 +48,6 @@ def load_knmi_data(station="260"):
 
     return df_meteorologisch, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain
 
-@st.cache_data(ttl=1800)
 def load_weather_forecast(latitude, longitude):
     url = (
         f"https://api.open-meteo.com/v1/forecast"
@@ -63,7 +62,6 @@ def load_weather_forecast(latitude, longitude):
 
     return data
 
-@st.cache_data(ttl=1800)
 def get_location_name(latitude, longitude):
     url = (f"https://nominatim.openstreetmap.org/reverse"f"?lat={latitude}&lon={longitude}&format=json")
     headers = {"User-Agent": "streamlit-weather-app"}
@@ -81,8 +79,8 @@ def get_location_name(latitude, longitude):
 
     return city
 
+@st.cache_data
 def get_cbsodata_energie():
-    dataset = ('84575NED')
-    data = cbsodata.get_data(dataset)
-    df_energie = pd.DataFrame(data)
+    dataset_energie = ('84575NED')
+    df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie

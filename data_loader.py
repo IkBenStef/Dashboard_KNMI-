@@ -5,15 +5,15 @@ import streamlit as st
 import io
 import cbsodata
 
+# knmi meteorologisch api = https://www.knmi.nl/nederland-nu/klimatologie/daggegevens
+# cbsodata energie    api = https://opendata.cbs.nl/portal.html?_la=nl&_catalog=CBS&tableId=83140NED&_theme=123
+# meteo voorspelling  api = https://open-meteo.com/
+
 @st.cache_data
 def load_knmi_data(station="260"):
     url = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
     params = {"stns": station, "vars": "TG:RH:FG", "start": "19000101", "end": "20251231"}
     response = requests.post(url, data=params)
-
-    if response.status_code != 200:
-        raise Exception("Fout bij ophalen KNMI data")
-
     lines = response.text.splitlines()
 
     data_lines = []
@@ -26,7 +26,7 @@ def load_knmi_data(station="260"):
             data_lines.append(line)
     csv_data = header_line + "\n" + "\n".join(data_lines)
     df_meteorologisch = pd.read_csv(io.StringIO(csv_data), skipinitialspace=True)
-
+    
     # Datum correct zetten
     df_meteorologisch['YYYYMMDD'] = pd.to_datetime(df_meteorologisch['YYYYMMDD'], format='%Y%m%d')
     df_meteorologisch.rename(columns={'YYYYMMDD': 'date'}, inplace=True)

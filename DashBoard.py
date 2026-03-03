@@ -5,7 +5,7 @@ import streamlit as st
 st.set_page_config(page_title="KNMI Dashboard", layout="wide", page_icon="📊")
 st.title("KNMI Temperatuur Dashboard")
 st.markdown("Gebruik het menu links om een pagina te selecteren.")
-st.markdown("Dit is een DashBoard met data van KNMI api, de Open Meteo api en de cbsodata api. Dit dashboard is gemaakt door groep 1 voor de case: DashBoard")
+st.markdown("Dit is een DashBoard met data van de KNMI api, de Open Meteo api en de cbsodata api. Dit dashboard is gemaakt door groep 1 voor de case: DashBoard")
 st.divider()
 st.markdown("""<style>[data-testid="stImage"] img {height: 300px;object-fit: cover;}</style>""", unsafe_allow_html=True)
 
@@ -21,3 +21,4 @@ with col2:
 with col3:
 
     st.image(cbs_afbeelding)
+

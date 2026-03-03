@@ -12,7 +12,7 @@ import cbsodata
 @st.cache_data
 def load_knmi_data(station="260"):
     url = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
-    params = {"stns": station, "vars": "TG:RH:FG", "start": "19000101", "end": "20251231"}
+    params = {"stns": station, "vars": "TG:TX:TN:RH:FG", "start": "19000101", "end": "20251231"}
     response = requests.post(url, data=params)
     lines = response.text.splitlines()
 

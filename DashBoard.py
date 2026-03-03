@@ -2,7 +2,7 @@ import streamlit as st
 
 # Terminal: python -m streamlit run DashBoard.py
 
-st.set_page_config(page_title="KNMI Dashboard", layout="wide")
+st.set_page_config(page_title="KNMI Dashboard", layout="wide", page_icon="📊")
 st.title("KNMI Temperatuur Dashboard")
 st.markdown("Gebruik het menu links om een pagina te selecteren.")
 st.markdown("Dit is een DashBoard met data van KNMI api, de Open Meteo api en de cbsodata api. Dit dashboard is gemaakt door groep 1 voor de case: DashBoard")
@@ -19,4 +19,5 @@ with col1:
 with col2:
     st.image(open_meteo_afbeelding, use_container_width=True)
 with col3:
+
     st.image(cbs_afbeelding)

@@ -1,90 +1,207 @@
-import pandas as pd
-import numpy as np
-import requests
 import streamlit as st
-import io
-import cbsodata
+import plotly.graph_objects as go
+import numpy as np
+from data_loader import load_knmi_data
+from stations import station_dict
 
-# knmi meteorologisch api = https://www.knmi.nl/nederland-nu/klimatologie/daggegevens
-# cbsodata energie    api = https://opendata.cbs.nl/portal.html?_la=nl&_catalog=CBS&tableId=83140NED&_theme=123
-# meteo voorspelling  api = https://open-meteo.com/
+st.set_page_config(layout="wide")
+st.title("Historische data")
+st.divider()
+# ======================================================================================== SIDEBAR
 
-@st.cache_data
-def load_knmi_data(station="260"):
-    url = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
-    params = {"stns": station, "vars": "TG:RH:FG", "start": "19000101", "end": "20251231"}
-    response = requests.post(url, data=params)
+st.sidebar.header("Instellingen")
+selected_station_name = st.sidebar.selectbox("Selecteer station",list(station_dict.keys()))
+station = station_dict[selected_station_name]
 
-    if response.status_code != 200:
-        raise Exception("Fout bij ophalen KNMI data")
+df_meteorologisch, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain = load_knmi_data(station=station)
 
-    lines = response.text.splitlines()
+min_year = int(df_yearly_temp['year'].min())
+max_year = int(df_yearly_temp['year'].max())
 
-    data_lines = []
-    header_line = ""
+# Jaar slider
+selected_year_range = st.sidebar.slider(
+    "Selecteer jaartal range",
+    min_value=min_year,
+    max_value=max_year,
+    value=(min_year, max_year),
+)
 
-    for line in lines:
-        if line.startswith('# STN'):
-            header_line = line.replace('#', '').strip()
-        elif not line.startswith('#') and line.strip():
-            data_lines.append(line)
-    csv_data = header_line + "\n" + "\n".join(data_lines)
-    df_meteorologisch = pd.read_csv(io.StringIO(csv_data), skipinitialspace=True)
+# ======================================================================================== Maand selectie met selecteer alles / deselecteer alles
 
-    # Datum correct zetten
-    df_meteorologisch['YYYYMMDD'] = pd.to_datetime(df_meteorologisch['YYYYMMDD'], format='%Y%m%d')
-    df_meteorologisch.rename(columns={'YYYYMMDD': 'date'}, inplace=True)
+maand_namen = {1: "Januari", 2: "Februari", 3: "Maart", 4: "April",5: "Mei", 6: "Juni", 7: "Juli", 8: "Augustus",9: "September", 10: "Oktober", 11: "November", 12: "December"}
+maand_lijst = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+# Session state initialiseren
+if "selected_months" not in st.session_state:
+    st.session_state.selected_months = list(maand_namen.keys())
 
-    # Eenheden corrigeren met nieuwe kolommen
-    df_meteorologisch['Temperatuur_C'] = df_meteorologisch['TG'] * 0.1
-    df_meteorologisch['Neerslag_MM'] = df_meteorologisch['RH'] * 0.1
-    df_meteorologisch['Windsnelheid_ms'] = df_meteorologisch['FG'] * 0.1
+st.sidebar.markdown("### Selecteer maanden")
 
-    df_meteorologisch['year'] = df_meteorologisch['date'].dt.year
-    df_meteorologisch['month'] = df_meteorologisch['date'].dt.month
+col1, col2 = st.sidebar.columns(2)
+if col1.button("Selecteer Alles"):
+    st.session_state.selected_months = list(maand_namen.keys())
+if col2.button("Selecteer Niets"):
+    st.session_state.selected_months = []
 
-    # Jaarlijkse groepering
-    df_yearly_temp = df_meteorologisch.groupby('year')['Temperatuur_C'].mean().reset_index()
-    df_yearly_rain = df_meteorologisch.groupby('year')['Neerslag_MM'].sum().reset_index()
-    # Maandelijkse groepering
-    df_monthly_temp = df_meteorologisch.groupby(['year', 'month'])['Temperatuur_C'].mean().reset_index()
-    df_monthly_rain = df_meteorologisch.groupby(['year', 'month'])['Neerslag_MM'].sum().reset_index()
+selected_months = st.sidebar.multiselect(
+    "Selecteer maanden",
+    options=list(maand_namen.keys()),
+    format_func=lambda x: maand_namen[x],
+    key="selected_months"
+)
 
-    return df_meteorologisch, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain
+# ======================================================================================== Jaargemiddelde met trend (maandafhankelijk)
 
-def load_weather_forecast(latitude, longitude):
-    url = (
-        f"https://api.open-meteo.com/v1/forecast"
-        f"?latitude={latitude}"
-        f"&longitude={longitude}"
-        "&hourly=temperature_2m,precipitation"
-        "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum"
-        "&timezone=auto"
+df_filtered = df_monthly_temp[
+    (df_monthly_temp['year'] >= selected_year_range[0]) &
+    (df_monthly_temp['year'] <= selected_year_range[1]) &
+    (df_monthly_temp['month'].isin(selected_months))
+]
+
+df_monthly_temp_filtered = (
+    df_filtered
+    .groupby('year')['Temperatuur_C']
+    .mean()
+    .reset_index()
+)
+
+fig_year_temp = go.Figure()
+
+fig_year_temp.add_trace(go.Scatter(
+    x=df_monthly_temp_filtered['year'],
+    y=df_monthly_temp_filtered['Temperatuur_C'],
+    mode='lines+markers',
+    name='Gemiddelde temperatuur'
+))
+
+if len(df_monthly_temp_filtered) > 1:
+    yearly_trend_coefficients = np.polyfit(
+        df_monthly_temp_filtered['year'],
+        df_monthly_temp_filtered['Temperatuur_C'],
+        1
     )
-    response = requests.get(url)
-    data = response.json()
 
-    return data
+    df_monthly_temp_filtered['trend'] = (
+        yearly_trend_coefficients[0] * df_monthly_temp_filtered['year'] + yearly_trend_coefficients[1]
+    )
 
-def get_location_name(latitude, longitude):
-    url = (f"https://nominatim.openstreetmap.org/reverse"f"?lat={latitude}&lon={longitude}&format=json")
-    headers = {"User-Agent": "streamlit-weather-app"}
-    response = requests.get(url, headers=headers)
-    data = response.json()
-    address = data.get("address", {})
+    fig_year_temp.add_trace(go.Scatter(
+        x=df_monthly_temp_filtered['year'],
+        y=df_monthly_temp_filtered['trend'],
+        mode='lines',
+        name='Trend',
+        line=dict(dash='dash')
+    ))
+
     
-    city = (
-        address.get("city")
-        or address.get("town")
-        or address.get("village")
-        or address.get("municipality")
-        or "Onbekende locatie"
-    )
 
-    return city
+fig_year_temp.update_layout(
+    template="plotly_white",
+    xaxis_title="Jaar",
+    yaxis_title="Gemiddelde temperatuur (°C)",
+    yaxis=dict(range=[0, 13])
+)
 
-@st.cache_data
-def get_cbsodata_energie():
-    dataset_energie = ('84575NED')
-    df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
-    return df_energie
+st.subheader("Gemiddelde jaarlijkse temperatuur")
+st.plotly_chart(fig_year_temp, use_container_width=True)
+st.markdown(f"**Gemiddelde stijging per jaar:** {yearly_trend_coefficients[0]:.4f} °C")
+st.divider()
+
+# ======================================================================================== Neerslag per jaar
+
+df_rain_filtered = df_yearly_rain[
+    (df_yearly_rain['year'] >= selected_year_range[0]) &
+    (df_yearly_rain['year'] <= selected_year_range[1])
+]
+
+fig_rain = go.Figure()
+
+fig_rain.add_trace(go.Bar(
+    x=df_rain_filtered['year'],
+    y=df_rain_filtered['Neerslag_MM'],
+    name='Totale neerslag'
+))
+
+fig_rain.update_layout(
+    template="plotly_white",
+    xaxis_title="Jaar",
+    yaxis_title="Totale neerslag (mm)"
+)
+
+st.subheader("Totale neerslag per jaar")
+st.plotly_chart(fig_rain, use_container_width=True)
+st.divider()
+
+# ======================================================================================== Gemiddelde temperatuur per maand
+
+df_monthly_filtered_temp = df_monthly_temp[
+    (df_monthly_temp['year'] >= selected_year_range[0]) &
+    (df_monthly_temp['year'] <= selected_year_range[1])
+]
+
+df_monthly_avg_temp = (
+    df_monthly_filtered_temp
+    .groupby('month')['Temperatuur_C']
+    .mean()
+    .reset_index()
+)
+
+fig_month_bar = go.Figure()
+
+fig_month_bar.add_trace(go.Bar(
+    x=df_monthly_avg_temp['month'],
+    y=df_monthly_avg_temp['Temperatuur_C'],
+    marker=dict(
+        color=df_monthly_avg_temp['Temperatuur_C'],
+        colorscale='Bluered',
+        colorbar=dict(title="Waarde")
+    ),
+    name="Maandgemiddelde"
+))
+
+fig_month_bar.update_layout(
+    template="plotly_white",
+    xaxis=dict(
+        tickmode='array',
+        tickvals=list(range(1, 13)),
+        ticktext=maand_lijst
+    ),
+    xaxis_title="Maand",
+    yaxis_title="Gemiddelde temperatuur (°C)",
+)
+st.subheader("Gemiddelde temperatuur per maand")
+st.plotly_chart(fig_month_bar, use_container_width=True)
+
+# ======================================================================================== Totale regen per maand
+
+df_monthly_filtered = df_monthly_rain[
+    (df_monthly_rain['year'] >= selected_year_range[0]) &
+    (df_monthly_rain['year'] <= selected_year_range[1])
+]
+
+df_monthly_tot_rain = (
+    df_monthly_filtered
+    .groupby('month')['Neerslag_MM']
+    .sum()
+    .reset_index()
+)
+
+fig_month_bar = go.Figure()
+
+fig_month_bar.add_trace(go.Bar(
+    x=df_monthly_tot_rain['month'],
+    y=df_monthly_tot_rain['Neerslag_MM'],
+    name="Maandtotaal"
+))
+
+fig_month_bar.update_layout(
+    template="plotly_white",
+    xaxis=dict(
+        tickmode='array',
+        tickvals=list(range(1, 13)),
+        ticktext=maand_lijst
+    ),
+    xaxis_title="Maand",
+    yaxis_title="Totaal Neerslag_MM",
+)
+st.subheader("Totale neerslag per maand (totaal over de hele jaar range)")
+st.plotly_chart(fig_month_bar, use_container_width=True)

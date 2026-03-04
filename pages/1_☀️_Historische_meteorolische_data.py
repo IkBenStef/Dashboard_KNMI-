@@ -120,7 +120,6 @@ fig_rain.add_trace(go.Bar(
     y=df_rain_filtered['Neerslag_MM'],
     name='Totale neerslag',
     color='Neerslag_MM',
-    color_continuous_scale='Blues'
 ))
 
 fig_rain.update_layout(
@@ -207,4 +206,5 @@ fig_month_bar.update_layout(
 )
 st.subheader("Totale neerslag per maand (totaal over de hele jaar range)")
 st.plotly_chart(fig_month_bar, use_container_width=True)
+
 

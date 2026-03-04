@@ -13,7 +13,7 @@ from stations import station_dict
 # PAGINA CONFIGURATIE
 # =========================================================
 st.set_page_config(page_title="Klimaatverandering & Extremen", layout="wide")
-st.title("Klimaatverandering & Extremen (KNMI)")
+st.title("Klimaatverandering & Extremen")
 
 st.markdown(
     """
@@ -36,7 +36,7 @@ selected_station_name = st.sidebar.selectbox(
 )
 station = station_dict[selected_station_name]
 
-# Data laden via jullie data_loader (deze laten we ongewijzigd)
+# Data laden via data_loader 
 df_meteo, df_yearly_temp, df_monthly_temp, df_monthly_rain, df_yearly_rain = load_knmi_data(station=station)
 
 min_year = int(df_meteo["year"].min())
@@ -46,7 +46,7 @@ selected_year_range = st.sidebar.slider(
     "Selecteer jaartal range",
     min_value=min_year,
     max_value=max_year,
-    value=(max(min_year, 1950), max_year)  # vaak handig om vanaf ~1950 te kijken
+    value=(max(min_year, 1950), max_year) 
 )
 
 st.sidebar.markdown("---")
@@ -88,14 +88,11 @@ df = df_meteo[
     (df_meteo["year"] <= end_year)
 ].copy()
 
-# Negatieve neerslag komt soms voor door missings/speciale codes (bijv. -1).
-# Dat willen we niet als echte neerslag behandelen.
+# positieve waarden
 if "Neerslag_MM" in df.columns:
     df.loc[df["Neerslag_MM"] < 0, "Neerslag_MM"] = np.nan
 
-# Belangrijk: jullie data_loader maakt alleen Temperatuur_C op basis van TG (daggemiddelde).
-# Voor extremen moeten we TX (dagmaximum) en TN (dagminimum) gebruiken.
-# TX en TN staan in 0.1 °C, dus we zetten om naar °C.
+# een heid omzetten naar°C.
 if "TX" in df.columns:
     df["TempMax_C"] = df["TX"] * 0.1
 else:

@@ -51,7 +51,7 @@ fig.add_trace(go.Bar(
     y=df_yearly_rain_filtered['Neerslag_MM'],
     name='Totale neerslag (mm)',
     yaxis='y1',
-    opacity=7.5
+    opacity=0.75
 ))
 fig.add_trace(go.Scatter(
     x=df_yearly_temp_filtered['year'],
@@ -92,6 +92,7 @@ st.subheader("Correlatie Neerslag <-> Windsnelheid")
 
 fig_corr_wind_rian = px.scatter(df_filtered,x='Windsnelheid_ms',y='Neerslag_MM',opacity=0.7)
 st.plotly_chart(fig_corr_wind_rian, use_container_width=True)
+
 
 
 

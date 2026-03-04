@@ -63,28 +63,32 @@ def load_weather_forecast(latitude, longitude):
     return data
 
 def get_location_name(latitude, longitude):
-    url = (f"https://nominatim.openstreetmap.org/reverse"f"?lat={latitude}&lon={longitude}&format=json")
-    headers = {"User-Agent": "streamlit-weather-app"}
-    response = requests.get(url, headers=headers)
-    print(response.status_code)
-    print(response.text)
-    data = response.json()
-    address = data.get("address", {})
-    
-    city = (
-        address.get("city")
-        or address.get("town")
-        or address.get("village")
-        or address.get("municipality")
-        or "Onbekende locatie"
-    )
+    url = "https://api.bigdatacloud.net/data/reverse-geocode-client"
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "localityLanguage": "gb"
+    }
+    response = requests.get(url, params=params)
+    if response.status_code != 200:
+        return "Onbekende locatie"
 
-    return city
+    data = response.json()
+    admin = data.get("localityInfo", {}).get("administrative", [])
+
+    stad = next((a["name"] for a in admin if a.get("adminLevel") == 10), '')
+    gemeente = next((a["name"] for a in admin if a.get("adminLevel") == 8), '')
+    provincie = next((a["name"] for a in admin if a.get("adminLevel") == 4), '')
+    land = next((a["name"] for a in admin if a.get("adminLevel") == 3), '')
+
+    plek = stad + ', ' + gemeente + ', ' + provincie + ', ' + land
+    return plek
 
 @st.cache_data
 def get_cbsodata_energie():
     dataset_energie = ('84575NED')
     df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie
+
 
 

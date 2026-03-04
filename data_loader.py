@@ -68,7 +68,7 @@ def get_location_name(latitude, longitude):
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "localityLanguage": "gb"
+        "localityLanguage": "nl"
     }
     response = requests.get(url, params=params)
     if response.status_code != 200:
@@ -90,6 +90,7 @@ def get_cbsodata_energie():
     dataset_energie = ('84575NED')
     df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie
+
 
 
 

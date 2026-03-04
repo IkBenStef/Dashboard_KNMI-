@@ -68,7 +68,7 @@ def get_location_name(latitude, longitude):
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "localityLanguage": "nl"
+        "localityLanguage": "gb"
     }
     response = requests.get(url, params=params)
     if response.status_code != 200:
@@ -76,13 +76,12 @@ def get_location_name(latitude, longitude):
 
     data = response.json()
     admin = data.get("localityInfo", {}).get("administrative", [])
-    st.write(data)
-    stad = admin[4]["name"]
-    gemeente = admin[3]["name"]
-    provincie = admin[2]["name"]
-    land = admin[1]["name"]
+    #st.write(data)
+    stad = admin[0]["city"]
+    prov = admin[0]["principalSubdivision"]
+    land = admin[0]["countryName"]
 
-    plek = stad + ', ' + gemeente + ', ' + provincie + ', ' + land
+    plek = stad + ', ' + prov + ', ' + land
     return plek
 
 @st.cache_data
@@ -90,6 +89,7 @@ def get_cbsodata_energie():
     dataset_energie = ('84575NED')
     df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie
+
 
 
 

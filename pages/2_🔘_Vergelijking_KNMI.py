@@ -46,19 +46,21 @@ st.subheader("Jaarlijkse temperatuur & neerslag")
 
 # temperatuur <-> neerslag
 fig = go.Figure()
-fig.add_trace(go.Bar(
-    x=df_yearly_rain_filtered['year'],
-    y=df_yearly_rain_filtered['Neerslag_MM'],
-    name='Totale neerslag (mm)',
-    yaxis='y2',
-    opacity=0.2
-))
 fig.add_trace(go.Scatter(
     x=df_yearly_temp_filtered['year'],
     y=df_yearly_temp_filtered['Temperatuur_C'],
     mode='lines+markers',
     name='Gem. temperatuur (°C)',
-    yaxis='y1'
+    yaxis='y1',
+    marker=dict(color='#1C72DC')
+))
+fig.add_trace(go.Bar(
+    x=df_yearly_rain_filtered['year'],
+    y=df_yearly_rain_filtered['Neerslag_MM'],
+    name='Totale neerslag (mm)',
+    yaxis='y2',
+    opacity=0.5,
+    marker=dict(color='#B5232F')
 ))
 fig.update_layout(
     template="plotly_white",
@@ -92,5 +94,6 @@ st.subheader("Correlatie Neerslag <-> Windsnelheid")
 
 fig_corr_wind_rian = px.scatter(df_filtered,x='Windsnelheid_ms',y='Neerslag_MM',opacity=0.7)
 st.plotly_chart(fig_corr_wind_rian, use_container_width=True)
+
 
 

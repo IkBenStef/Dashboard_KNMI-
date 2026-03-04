@@ -66,6 +66,8 @@ def get_location_name(latitude, longitude):
     url = (f"https://nominatim.openstreetmap.org/reverse"f"?lat={latitude}&lon={longitude}&format=json")
     headers = {"User-Agent": "streamlit-weather-app"}
     response = requests.get(url, headers=headers)
+    print(response.status_code)
+    print(response.text)
     data = response.json()
     address = data.get("address", {})
     
@@ -84,4 +86,5 @@ def get_cbsodata_energie():
     dataset_energie = ('84575NED')
     df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie
+
 

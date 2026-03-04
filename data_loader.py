@@ -75,11 +75,10 @@ def get_location_name(latitude, longitude):
         return "Onbekende locatie"
 
     data = response.json()
-    admin = data.get("localityInfo", {}).get("administrative", [])
     #st.write(data)
-    stad = admin[0]["city"]
-    prov = admin[0]["principalSubdivision"]
-    land = admin[0]["countryName"]
+    stad = data[0]["city"]
+    prov = data[0]["principalSubdivision"]
+    land = data[0]["countryName"]
 
     plek = stad + ', ' + prov + ', ' + land
     return plek
@@ -89,6 +88,7 @@ def get_cbsodata_energie():
     dataset_energie = ('84575NED')
     df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie
+
 
 
 

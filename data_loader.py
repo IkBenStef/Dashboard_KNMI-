@@ -72,10 +72,10 @@ def get_location_name(latitude, longitude):
     response = requests.get(url, params=params)
     if response.status_code != 200:
         return "Onbekende locatie"
-
+    st.error(response)
     data = response.json()
     admin = data.get("localityInfo", {}).get("administrative", [])
-
+    st.error(data)
     stad = next((a["name"] for a in admin if a.get("adminLevel") == 10), '')
     gemeente = next((a["name"] for a in admin if a.get("adminLevel") == 8), '')
     provincie = next((a["name"] for a in admin if a.get("adminLevel") == 4), '')
@@ -89,6 +89,7 @@ def get_cbsodata_energie():
     dataset_energie = ('84575NED')
     df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie
+
 
 
 

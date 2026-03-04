@@ -5,9 +5,10 @@ import streamlit as st
 import io
 import cbsodata
 
-# knmi meteorologisch api = https://www.knmi.nl/nederland-nu/klimatologie/daggegevens
-# cbsodata energie    api = https://opendata.cbs.nl/portal.html?_la=nl&_catalog=CBS&tableId=83140NED&_theme=123
-# meteo voorspelling  api = https://open-meteo.com/
+# knmi meteorologisch   api = https://www.knmi.nl/nederland-nu/klimatologie/daggegevens
+# cbsodata energie      api = https://opendata.cbs.nl/portal.html?_la=nl&_catalog=CBS&tableId=83140NED&_theme=123
+# meteo actueel weer    api = https://open-meteo.com/
+# de locatie verkijgren api = https://www.bigdatacloud.com/free-api
 
 @st.cache_data
 def load_knmi_data(station="260"):
@@ -89,6 +90,7 @@ def get_cbsodata_energie():
     dataset_energie = ('84575NED')
     df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie
+
 
 
 

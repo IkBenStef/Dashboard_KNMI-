@@ -48,7 +48,8 @@ fig_line = px.line(
     df_actual,
     x="year",
     y="Temperatuur_C",
-    title="Gemiddelde Jaarlijkse Temperatuur (2000 - toekomst)"
+    title="Gemiddelde Jaarlijkse Temperatuur (2000 - toekomst)",
+    name='Historisch'
 )
 
 fig_line.add_scatter(

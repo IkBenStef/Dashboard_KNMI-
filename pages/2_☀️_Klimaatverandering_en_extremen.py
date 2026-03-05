@@ -1,5 +1,3 @@
-# pages/5_Klimaatverandering_en_extremen.py
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,9 +7,8 @@ from data_loader import load_knmi_data
 from stations import station_dict
 
 
-# =========================================================
 # PAGINA CONFIGURATIE
-# =========================================================
+
 st.set_page_config(page_title="Klimaatverandering & Extremen", layout="wide")
 st.title("Klimaatverandering & Extremen")
 
@@ -25,9 +22,8 @@ en of extreme weersituaties vaker voorkomen (hitte, vorst, zware neerslag).
 st.divider()
 
 
-# =========================================================
 # SIDEBAR: INSTELLINGEN
-# =========================================================
+
 st.sidebar.header("Instellingen")
 
 selected_station_name = st.sidebar.selectbox(
@@ -50,37 +46,35 @@ selected_year_range = st.sidebar.slider(
 )
 
 st.sidebar.markdown("---")
-
+# Recent window voor trend vergelijking
+recent_years = st.sidebar.selectbox(
+    "Definitie van 'recente jaren'",
+    options=[10, 20, 30, 40],
+    index=2
+)
 # Drempels voor extremen
 temp_threshold = st.sidebar.selectbox(
-    "Drempel voor hitte-dagen (op basis van TX = dagmaximum)",
+    "Drempel voor hitte-dagen",
     options=[25, 30],
     index=0
 )
 
 rain_threshold = st.sidebar.selectbox(
-    "Drempel voor zware neerslag (mm/dag)",
+    "Drempel voor zware neerslag",
     options=[10, 20, 30],
     index=1
 )
 
-# Recent window voor trend vergelijking
-recent_years = st.sidebar.selectbox(
-    "Definitie van 'recente jaren' (trend/vergelijking)",
-    options=[10, 20, 30, 40],
-    index=2
-)
+
 
 show_frost = st.sidebar.checkbox("Toon ook vorstdagen (TN < 0°C)", value=True)
 show_max_rain = st.sidebar.checkbox("Toon max. dagneerslag per jaar", value=True)
 
-st.sidebar.markdown("---")
-st.sidebar.caption("Tip: probeer meerdere stations om verschillen (bijv. kust vs binnenland) te zien.")
 
 
-# =========================================================
+
 # DATA FILTEREN EN OPSCHONEN
-# =========================================================
+
 start_year, end_year = selected_year_range
 
 df = df_meteo[
@@ -104,9 +98,9 @@ else:
     df["TempMin_C"] = np.nan
 
 
-# =========================================================
-# HELPER: LINEAIRE TREND BEREKENEN
-# =========================================================
+
+#  LINEAIRE TREND BEREKENEN
+
 def linear_trend(x: pd.Series, y: pd.Series):
     """
     Bereken lineaire trend y = a*x + b.
@@ -121,9 +115,7 @@ def linear_trend(x: pd.Series, y: pd.Series):
     return a, b
 
 
-# =========================================================
-# 1) TEMPERATUURTREND (OP BASIS VAN TG = DAGGEMIDDELDE)
-# =========================================================
+# 1) TEMPERATUURTREND 
 st.subheader("1) Opwarming: jaarlijkse gemiddelde temperatuur (TG)")
 
 df_year_temp = (
@@ -185,23 +177,19 @@ fig_temp.update_layout(
 
 st.plotly_chart(fig_temp, use_container_width=True)
 
-st.caption(
-    "Opmerking: dit is op basis van **TG (daggemiddelde)**. "
-    "Voor 'zomerse dagen' en 'tropische dagen' gebruik je **TX (dagmaximum)**."
-)
 
 st.divider()
 
 
-# =========================================================
-# 2) EXTREME TEMPERATUREN (TX/TN)
-# =========================================================
+
+# 2) EXTREME TEMPERATUREN 
+
 st.subheader("2) Extreme temperaturen")
 
-# Hitte-dagen: op basis van TX (dagmaximum)
+# Hitte-dagen
 df["is_hot"] = df["TempMax_C"] >= float(temp_threshold)
 
-# Vorstdagen: op basis van TN (dagnminimum)
+# Vorstdagen
 df["is_frost"] = df["TempMin_C"] < 0.0
 
 df_extreme_temp = (
@@ -235,13 +223,13 @@ if a_hot is not None:
 
 fig_hot.update_layout(
     template="plotly_white",
-    title=f"Aantal hitte-dagen per jaar (TX ≥ {temp_threshold}°C)",
+    title=f"Aantal hitte-dagen per jaar ( ≥ {temp_threshold}°C)",
     xaxis_title="Jaar",
     yaxis_title="Aantal dagen"
 )
 st.plotly_chart(fig_hot, use_container_width=True)
 
-# Vorstdagen (optioneel)
+# Vorstdagen 
 if show_frost:
     a_frost, b_frost = linear_trend(df_extreme_temp["year"], df_extreme_temp["frost_days"])
 
@@ -249,7 +237,7 @@ if show_frost:
     fig_frost.add_trace(go.Bar(
         x=df_extreme_temp["year"],
         y=df_extreme_temp["frost_days"],
-        name="Vorstdagen (TN < 0°C)"
+        name="Vorstdagen (< 0°C)"
     ))
 
     if a_frost is not None:
@@ -264,7 +252,7 @@ if show_frost:
 
     fig_frost.update_layout(
         template="plotly_white",
-        title="Aantal vorstdagen per jaar (TN < 0°C)",
+        title="Aantal vorstdagen per jaar (< 0°C)",
         xaxis_title="Jaar",
         yaxis_title="Aantal dagen"
     )
@@ -273,9 +261,8 @@ if show_frost:
 st.divider()
 
 
-# =========================================================
-# 3) EXTREME NEERSLAG (RH -> Neerslag_MM)
-# =========================================================
+
+# 3) EXTREME NEERSLAG 
 st.subheader("3) Extreme neerslag")
 
 df["is_heavy_rain"] = df["Neerslag_MM"] >= float(rain_threshold)
@@ -317,7 +304,7 @@ fig_rain_days.update_layout(
 )
 st.plotly_chart(fig_rain_days, use_container_width=True)
 
-# Max dagneerslag per jaar (optioneel)
+# Max dagneerslag per jaar 
 if show_max_rain:
     a_max, b_max = linear_trend(df_extreme_rain["year"], df_extreme_rain["max_daily_rain"])
 
@@ -348,57 +335,4 @@ if show_max_rain:
     st.plotly_chart(fig_max_rain, use_container_width=True)
 
 st.divider()
-
-
-# =========================================================
-# 4) AUTOMATISCHE CONCLUSIES 
-# =========================================================
-st.subheader("4) Automatische interpretatie")
-
-conclusions = []
-
-# Temperatuurtrend
-if a_recent is not None:
-    conclusions.append(
-        f"- In de laatste **{recent_years} jaar** is de temperatuurtrend ongeveer **{a_recent*10:.3f} °C per decennium** (station: {selected_station_name})."
-    )
-elif a_all is not None:
-    conclusions.append(
-        f"- Over de gekozen periode is de temperatuurtrend ongeveer **{a_all*10:.3f} °C per decennium** (station: {selected_station_name})."
-    )
-else:
-    conclusions.append("- Er zijn niet genoeg datapunten om een betrouwbare temperatuurtrend te berekenen.")
-
-# Hitte-dagen trend
-if a_hot is not None:
-    conclusions.append(
-        f"- Het aantal **hitte-dagen (TX ≥ {temp_threshold}°C)** verandert met ongeveer **{a_hot:.3f} dagen per jaar** (≈ {a_hot*10:.2f} dagen per decennium)."
-    )
-else:
-    conclusions.append(f"- Trend voor hitte-dagen (TX ≥ {temp_threshold}°C) kon niet berekend worden.")
-
-# Vorstdagen trend (optioneel)
-if show_frost:
-    if "frost_days" in df_extreme_temp.columns:
-        a_frost2, _ = linear_trend(df_extreme_temp["year"], df_extreme_temp["frost_days"])
-        if a_frost2 is not None:
-            conclusions.append(
-                f"- Het aantal **vorstdagen (TN < 0°C)** verandert met ongeveer **{a_frost2:.3f} dagen per jaar** (≈ {a_frost2*10:.2f} dagen per decennium)."
-            )
-
-# Zware neerslag trend
-if a_rain_days is not None:
-    conclusions.append(
-        f"- Het aantal **zware neerslagdagen (≥ {rain_threshold} mm/dag)** verandert met ongeveer **{a_rain_days:.3f} dagen per jaar** (≈ {a_rain_days*10:.2f} dagen per decennium)."
-    )
-else:
-    conclusions.append(f"- Trend voor zware neerslagdagen (≥ {rain_threshold} mm/dag) kon niet berekend worden.")
-
-st.markdown("\n".join(conclusions))
-
-st.caption(
-    "Beperkingen: één station ≠ heel Nederland; meetmethodes/locatie kunnen veranderen; "
-    "missings kunnen vooral in vroege jaren invloed hebben; dit toont trend/correlatie, geen directe causaliteit."
-)
-
 

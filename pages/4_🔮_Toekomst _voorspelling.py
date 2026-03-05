@@ -3,8 +3,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-
-# Jouw functie importeren
+import plotly.graph_objects as go
 from data_loader import load_knmi_data
 
 st.title("KNMI Temperatuur Voorspeller")
@@ -44,22 +43,28 @@ years_range["prediction"] = years_range["year"].apply(predict)
 df_actual = df_yearly_temp[df_yearly_temp["year"] >= 2000]
 df_pred_future = years_range[years_range["year"] > max_year]
 
-fig_line = px.line(
-    df_actual,
-    x="year",
-    y="Temperatuur_C",
-    title="Gemiddelde Jaarlijkse Temperatuur (2000 - toekomst)",
-    name='Historisch'
-)
-
-fig_line.add_scatter(
+fig_line = go.Figure()
+# De Historische lijn
+fig_line.add_trace(go.Scatter(
+    x=df_actual["year"],
+    y=df_actual["Temperatuur_C"],
+    mode="lines",
+    name="Historisch",
+    line=dict(color="blue")
+))
+# De Voorspelling lijn
+fig_line.add_trace(go.Scatter(
     x=df_pred_future["year"],
     y=df_pred_future["prediction"],
     mode="lines",
     name="Voorspelling",
-    line=dict(color="red")
+    line=dict(color="red", dash="dash") 
+))
+fig_line.update_layout(
+    title="Gemiddelde Jaarlijkse Temperatuur (2000 - toekomst)",
+    xaxis_title="Jaar",
+    yaxis_title="Temperatuur (°C)"
 )
-
 st.plotly_chart(fig_line, use_container_width=True)
 
 st.subheader(f"Voorspelde gemiddelde temperatuur in {future_year}:")

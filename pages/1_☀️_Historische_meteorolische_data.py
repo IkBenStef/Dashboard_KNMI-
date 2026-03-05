@@ -118,13 +118,15 @@ fig_rain = go.Figure()
 fig_rain.add_trace(go.Bar(
     x=df_rain_filtered['year'],
     y=df_rain_filtered['Neerslag_MM'],
-    name='Totale neerslag'
+    name='Totale neerslag',
+    marker=dict(color=df_rain_filtered['Neerslag_MM'], colorscale='Blues')
 ))
 
 fig_rain.update_layout(
     template="plotly_white",
     xaxis_title="Jaar",
-    yaxis_title="Totale neerslag (mm)"
+    yaxis_title="Totale neerslag (mm)",
+    
 )
 
 st.subheader("Totale neerslag per jaar")
@@ -190,7 +192,8 @@ fig_month_bar = go.Figure()
 fig_month_bar.add_trace(go.Bar(
     x=df_monthly_tot_rain['month'],
     y=df_monthly_tot_rain['Neerslag_MM'],
-    name="Maandtotaal"
+    name="Maandtotaal",
+    marker=dict(color=df_monthly_tot_rain['Neerslag_MM'], colorscale='Blues')
 ))
 
 fig_month_bar.update_layout(
@@ -205,3 +208,12 @@ fig_month_bar.update_layout(
 )
 st.subheader("Totale neerslag per maand (totaal over de hele jaar range)")
 st.plotly_chart(fig_month_bar, use_container_width=True)
+
+
+
+
+
+
+
+
+

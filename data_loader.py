@@ -5,9 +5,10 @@ import streamlit as st
 import io
 import cbsodata
 
-# knmi meteorologisch api = https://www.knmi.nl/nederland-nu/klimatologie/daggegevens
-# cbsodata energie    api = https://opendata.cbs.nl/portal.html?_la=nl&_catalog=CBS&tableId=83140NED&_theme=123
-# meteo voorspelling  api = https://open-meteo.com/
+# knmi meteorologisch   api = https://www.knmi.nl/nederland-nu/klimatologie/daggegevens
+# cbsodata energie      api = https://opendata.cbs.nl/portal.html?_la=nl&_catalog=CBS&tableId=83140NED&_theme=123
+# meteo actueel weer    api = https://open-meteo.com/
+# de locatie verkijgren api = https://www.bigdatacloud.com/free-api
 
 @st.cache_data
 def load_knmi_data(station="260"):
@@ -63,24 +64,42 @@ def load_weather_forecast(latitude, longitude):
     return data
 
 def get_location_name(latitude, longitude):
-    url = (f"https://nominatim.openstreetmap.org/reverse"f"?lat={latitude}&lon={longitude}&format=json")
-    headers = {"User-Agent": "streamlit-weather-app"}
-    response = requests.get(url, headers=headers)
-    data = response.json()
-    address = data.get("address", {})
-    
-    city = (
-        address.get("city")
-        or address.get("town")
-        or address.get("village")
-        or address.get("municipality")
-        or "Onbekende locatie"
-    )
+    url = "https://api.bigdatacloud.net/data/reverse-geocode-client"
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "localityLanguage": "gb"
+    }
+    response = requests.get(url, params=params)
+    if response.status_code != 200:
+        return "Onbekende locatie"
 
-    return city
+    data = response.json()
+    #st.write(data)
+    stad = data["city"]
+    prov = data["principalSubdivision"]
+    land = data["countryCode"]
+
+    plek = stad + ', ' + prov + ', ' + land
+    return plek
 
 @st.cache_data
 def get_cbsodata_energie():
     dataset_energie = ('84575NED')
     df_energie = pd.DataFrame(cbsodata.get_data(dataset_energie))
     return df_energie
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

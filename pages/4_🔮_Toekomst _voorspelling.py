@@ -49,8 +49,7 @@ fig_line.add_trace(go.Scatter(
     x=df_actual["year"],
     y=df_actual["Temperatuur_C"],
     mode="lines",
-    name="Historisch",
-    line=dict(color="blue")
+    name="Historisch"
 ))
 # De Voorspelling lijn
 fig_line.add_trace(go.Scatter(
@@ -58,7 +57,7 @@ fig_line.add_trace(go.Scatter(
     y=df_pred_future["prediction"],
     mode="lines",
     name="Voorspelling",
-    line=dict(color="red", dash="dash") 
+    line=dict(dash="dash") 
 ))
 fig_line.update_layout(
     title="Gemiddelde Jaarlijkse Temperatuur (2000 - toekomst)",

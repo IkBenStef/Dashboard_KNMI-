@@ -137,7 +137,7 @@ k1, k2, k3 = st.columns(3)
 avg_temp_total = float(df_year_temp["Temp_mean"].mean()) if len(df_year_temp) else np.nan
 k1.metric("Gem. temperatuur (gekozen periode)", f"{avg_temp_total:.2f} °C" if pd.notna(avg_temp_total) else "—")
 
-k2.metric("Trend (hele periode)", f"{a_all*10:.3f} °C/decennium" if a_all is not None else "—")
+k2.metric("Trend (gekozen periode)", f"{a_all*10:.3f} °C/decennium" if a_all is not None else "—")
 k3.metric(f"Trend (laatste {recent_years} jaar)", f"{a_recent*10:.3f} °C/decennium" if a_recent is not None else "—")
 
 fig_temp = go.Figure()
